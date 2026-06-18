@@ -346,7 +346,7 @@ async function loadTotals() {
     const el = document.getElementById(`total-${factory}`);
     el.innerHTML = '<span class="skeleton"></span>';
     try {
-      const vals = await fetchRange(SHEET_NAMES[factory], 'G6');
+      const vals = await fetchRange(SHEET_NAMES[factory], 'G7');
       el.textContent = vals?.[0]?.[0] ?? '—';
     } catch(e) {
       el.textContent = '錯誤';
