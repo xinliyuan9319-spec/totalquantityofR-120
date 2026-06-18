@@ -389,7 +389,7 @@ async function loadDetail(factory) {
   try {
     const [rows, summary] = await Promise.all([
       fetchRange(SHEET_NAMES[factory], 'A1:C200'),
-      fetchRange(SHEET_NAMES[factory], 'F1:G6')
+      fetchRange(SHEET_NAMES[factory], 'F1:G8')
     ]);
 
     const accentClass = factory === '78' ? 'accent-78' : 'accent-75';
