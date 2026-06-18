@@ -400,7 +400,7 @@ async function loadDetail(factory) {
         if (!row[0]) return;
         const d = document.createElement('div');
         d.className = 'vendor-chip';
-        d.innerHTML = `<div class="vname">${row[0]}</div><div class="vval">${row[1] ?? '—'} 公斤</div>`;
+        d.innerHTML = `<div class="vname">${row[0]}</div><div class="vval">${row[1] ?? '—'} 公噸</div>`;
         vendorEl.appendChild(d);
       });
     }
@@ -416,7 +416,7 @@ async function loadDetail(factory) {
       </div>
       <div class="chip ${accentClass}">
         <div class="chip-label">合計</div>
-        <div class="chip-val">${total.toLocaleString()} 公斤</div>
+        <div class="chip-val">${total.toLocaleString()} 公噸</div>
       </div>`;
 
     if (dataRows.length === 0) {
