@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>茶渣收受管理系統</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f0ede8;
+    --surface: #faf8f5;
+    --border: #d6cfc4;
+    --text-primary: #1a1612;
+    --text-secondary: #6b6157;
+    --accent-78: #4a6741;
+    --accent-75: #7a4f2e;
+    --accent-78-light: #e8f0e6;
+    --accent-75-light: #f5ede6;
+    --tag-bg: #e8e3dc;
+    --shadow-hover: 0 6px 24px rgba(0,0,0,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--text-primary);
+    color: #f0ede8;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 1rem; font-weight: 500; letter-spacing: 0.08em; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .date-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76rem;
+    color: #a09890;
+  }
+  .gear-btn {
+    background: none;
+    border: 1px solid #3a3630;
+    border-radius: 5px;
+    color: #a09890;
+    font-size: 1rem;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .gear-btn:hover { border-color: #a09890; color: #f0ede8; }
+
+  /* ── Settings drawer ── */
+  .settings-drawer {
+    background: #252118;
+    color: #d0c8be;
+    padding: 0 28px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+  .settings-drawer.open {
+    max-height: 120px;
+    padding: 16px 28px;
+  }
+  .settings-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .settings-inner label { font-size: 0.76rem; color: #7a7268; letter-spacing: 0.06em; white-space: nowrap; }
+  .settings-inner input {
+    flex: 1; min-width: 200px; max-width: 380px;
+    background: #1a1612;
+    border: 1px solid #3a3630;
+    border-radius: 4px;
+    color: #d0c8be;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+  }
+  .settings-inner input:focus { border-color: #4a6741; }
+  .save-btn {
+    background: #4a6741;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 16px;
+    font-size: 0.8rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.85; }
+  .settings-hint {
+    font-size: 0.7rem;
+    color: #5a5248;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  /* ── Main ── */
+  main { max-width: 880px; margin: 0 auto; padding: 36px 20px 60px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Home ── */
+  .home-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .no-key-notice {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+  .no-key-notice strong { color: var(--text-primary); }
+
+  .factory-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .factory-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .factory-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .factory-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .factory-card.f78::before { background: var(--accent-78); }
+  .factory-card.f75::before { background: var(--accent-75); }
+
+  .factory-card .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-bottom: 14px;
+  }
+  .factory-card.f78 .tag { background: var(--accent-78-light); color: var(--accent-78); }
+  .factory-card.f75 .tag { background: var(--accent-75-light); color: var(--accent-75); }
+
+  .factory-card h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 18px; }
+
+  .total-row { display: flex; align-items: baseline; gap: 6px; }
+  .total-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 2.6rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .factory-card.f78 .total-num { color: var(--accent-78); }
+  .factory-card.f75 .total-num { color: var(--accent-75); }
+  .total-unit { font-size: 0.8rem; color: var(--text-secondary); }
+
+  .factory-card .cta {
+    margin-top: 18px;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+  }
+  .factory-card .cta::after { content: ' →'; }
+
+  .skeleton {
+    display: inline-block;
+    width: 70px; height: 2.4rem;
+    background: linear-gradient(90deg, #e0dbd4 25%, #ece8e2 50%, #e0dbd4 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 4px;
+    vertical-align: bottom;
+  }
+  @keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+
+  /* ── Detail ── */
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.8rem; color: var(--text-secondary);
+    cursor: pointer; border: none; background: none;
+    padding: 0; margin-bottom: 24px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: color 0.15s;
+  }
+  .back-btn:hover { color: var(--text-primary); }
+  .back-btn::before { content: '←'; }
+
+  .detail-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .detail-header h2 { font-size: 1.3rem; font-weight: 700; }
+  .refresh-btn {
+    font-size: 0.76rem; color: var(--text-secondary);
+    border: 1px solid var(--border);
+    background: var(--surface); border-radius: 4px;
+    padding: 5px 12px; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: border-color 0.15s;
+  }
+  .refresh-btn:hover { border-color: var(--text-primary); }
+
+  .summary-chips { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 16px;
+  }
+  .chip .chip-label {
+    font-size: 0.66rem; letter-spacing: 0.12em;
+    color: var(--text-secondary); text-transform: uppercase;
+    font-weight: 700; margin-bottom: 3px;
+  }
+  .chip .chip-val { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; }
+  .chip.accent-78 .chip-val { color: var(--accent-78); }
+  .chip.accent-75 .chip-val { color: var(--accent-75); }
+
+  .vendor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px; margin-bottom: 24px;
+  }
+  .vendor-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 9px 13px;
+  }
+  .vendor-chip .vname { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 3px; }
+  .vendor-chip .vval { font-family: 'DM Mono', monospace; font-size: 1rem; }
+
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--tag-bg); }
+  thead th {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-secondary);
+    padding: 11px 16px; text-align: left;
+  }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--bg); }
+  tbody td { padding: 12px 16px; font-size: 0.86rem; }
+  tbody td.num { font-family: 'DM Mono', monospace; font-size: 0.88rem; text-align: right; }
+  .empty-row td { text-align: center; color: var(--text-secondary); font-size: 0.83rem; padding: 28px; }
+
+  .error-box {
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 6px; padding: 14px 18px;
+    color: #b91c1c; font-size: 0.83rem; margin-bottom: 18px;
+    line-height: 1.6;
+  }
+
+  @media(max-width: 580px) {
+    .factory-cards { grid-template-columns: 1fr; }
+    header { padding: 14px 16px; }
+    main { padding: 24px 14px 48px; }
+    .settings-drawer.open { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>茶渣收受管理系統</h1>
+  <div class="header-right">
+    <span class="date-badge" id="todayDate"></span>
+    <button class="gear-btn" onclick="toggleSettings()" title="設定">⚙</button>
+  </div>
+</header>
+
+<!-- Hidden settings drawer -->
+<div class="settings-drawer" id="settingsDrawer">
+  <div class="settings-inner">
+    <label>API 金鑰</label>
+    <input type="password" id="apiKeyInput" placeholder="貼上 AIzaSy... 金鑰" autocomplete="off">
+    <button class="save-btn" onclick="saveConfig()">儲存並載入</button>
+    <div class="settings-hint">金鑰僅存於此裝置的瀏覽器，不會上傳至任何伺服器。</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- Home Page -->
+  <div class="page active" id="page-home">
+    <div class="home-label">各廠收受總覽</div>
+    <div id="no-key-msg" class="no-key-notice" style="display:none">
+      尚未設定 API 金鑰。<br>
+      請點右上角 <strong>⚙</strong> 按鈕，貼上 Google Sheets API 金鑰後按「儲存並載入」。
+    </div>
+    <div class="factory-cards">
+      <div class="factory-card f78" onclick="showDetail('78')">
+        <div class="tag">78廠</div>
+        <h2>78廠茶渣收受</h2>
+        <div class="total-row">
+          <span class="total-num" id="total-78"><span class="skeleton"></span></span>
+          <span class="total-unit">公斤</span>
+        </div>
+        <div class="cta">查看明細</div>
+      </div>
+      <div class="factory-card f75" onclick="showDetail('75')">
+        <div class="tag">75廠</div>
+        <h2>75廠茶渣收受</h2>
+        <div class="total-row">
+          <span class="total-num" id="total-75"><span class="skeleton"></span></span>
+          <span class="total-unit">公斤</span>
+        </div>
+        <div class="cta">查看明細</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Page -->
+  <div class="page" id="page-detail">
+    <button class="back-btn" onclick="showHome()">返回總覽</button>
+    <div class="detail-header">
+      <h2 id="detail-title"></h2>
+      <button class="refresh-btn" onclick="refreshDetail()">↻ 重新整理</button>
+    </div>
+    <div id="detail-error"></div>
+    <div class="summary-chips" id="detail-chips"></div>
+    <div class="vendor-grid" id="vendor-grid"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>廠商</th>
+            <th style="text-align:right">收受量（公斤）</th>
+          </tr>
+        </thead>
+        <tbody id="detail-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ★ 若你的分頁 tab 名稱不同，修改這裡 ★
+const SHEET_ID    = '1d3e2tlOSFGkWB_Ei7mQZVAPJPYKLIp6_2or8Y7LUsxo';
+const SHEET_NAMES = { '78': '分頁表1', '75': '分頁表2' };
+
+let currentFactory = null;
+let settingsOpen   = false;
+
+// Today
+const today = new Date();
+document.getElementById('todayDate').textContent =
+  today.toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+
+// ── Settings drawer ──
+function toggleSettings() {
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsDrawer').classList.toggle('open', settingsOpen);
+}
+
+function saveConfig() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { alert('請貼上 API 金鑰'); return; }
+  localStorage.setItem('gs_api_key', key);
+  // close drawer
+  settingsOpen = false;
+  document.getElementById('settingsDrawer').classList.remove('open');
+  document.getElementById('no-key-msg').style.display = 'none';
+  loadTotals();
+}
+
+function getApiKey() { return localStorage.getItem('gs_api_key') || ''; }
+
+window.onload = () => {
+  const saved = getApiKey();
+  if (saved) {
+    document.getElementById('apiKeyInput').value = saved;
+    loadTotals();
+  } else {
+    document.getElementById('total-78').textContent = '—';
+    document.getElementById('total-75').textContent = '—';
+    document.getElementById('no-key-msg').style.display = 'block';
+  }
+};
+
+// ── Fetch helper ──
+// 關鍵：加上 Origin 讓 Google API 不因 file:// 拒絕
+async function fetchRange(sheetName, range) {
+  const key = getApiKey();
+  if (!key) throw new Error('尚未設定 API 金鑰');
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheetName)}!${range}?key=${encodeURIComponent(key)}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+  } catch(netErr) {
+    throw new Error('網路連線失敗，請確認網路是否正常。（' + netErr.message + '）');
+  }
+
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const errBody = await res.json();
+      msg = errBody?.error?.message || msg;
+    } catch(_) {}
+
+    if (res.status === 400) throw new Error('API 金鑰格式錯誤，請重新確認。');
+    if (res.status === 403) throw new Error('API 金鑰無權限，請確認：\n① Google Sheets API 已啟用\n② Google Sheet 已設為「知道連結的人可以查看」\n③ 若有設定 API 限制，請改為「無限制」');
+    if (res.status === 404) throw new Error('找不到試算表，請確認試算表 ID 是否正確，以及分頁名稱是否吻合。');
+    throw new Error(msg);
+  }
+
+  const data = await res.json();
+  return data.values || [];
+}
+
+// ── Load home totals ──
+async function loadTotals() {
+  if (!getApiKey()) return;
+  for (const factory of ['78', '75']) {
+    const el = document.getElementById(`total-${factory}`);
+    el.innerHTML = '<span class="skeleton"></span>';
+    try {
+      const vals = await fetchRange(SHEET_NAMES[factory], 'G6');
+      el.textContent = vals?.[0]?.[0] ?? '—';
+    } catch(e) {
+      el.textContent = '錯誤';
+      console.error(`[${factory}廠 總計]`, e.message);
+    }
+  }
+}
+
+// ── Navigation ──
+function showHome() {
+  document.getElementById('page-home').classList.add('active');
+  document.getElementById('page-detail').classList.remove('active');
+  currentFactory = null;
+}
+
+async function showDetail(factory) {
+  currentFactory = factory;
+  document.getElementById('page-home').classList.remove('active');
+  document.getElementById('page-detail').classList.add('active');
+  document.getElementById('detail-title').textContent =
+    (factory === '78' ? '78廠' : '75廠') + ' 茶渣收受明細';
+  await loadDetail(factory);
+}
+
+async function refreshDetail() {
+  if (currentFactory) await loadDetail(currentFactory);
+}
+
+async function loadDetail(factory) {
+  const errEl      = document.getElementById('detail-error');
+  const tbody      = document.getElementById('detail-tbody');
+  const chipsEl    = document.getElementById('detail-chips');
+  const vendorEl   = document.getElementById('vendor-grid');
+
+  errEl.innerHTML  = '';
+  tbody.innerHTML  = '<tr class="empty-row"><td colspan="3">載入中…</td></tr>';
+  chipsEl.innerHTML = '';
+  vendorEl.innerHTML = '';
+
+  try {
+    const [rows, summary] = await Promise.all([
+      fetchRange(SHEET_NAMES[factory], 'A1:C200'),
+      fetchRange(SHEET_NAMES[factory], 'F1:G6')
+    ]);
+
+    const accentClass = factory === '78' ? 'accent-78' : 'accent-75';
+
+    // Vendor chips (F/G columns)
+    if (summary?.length) {
+      summary.forEach(row => {
+        if (!row[0]) return;
+        const d = document.createElement('div');
+        d.className = 'vendor-chip';
+        d.innerHTML = `<div class="vname">${row[0]}</div><div class="vval">${row[1] ?? '—'} 公斤</div>`;
+        vendorEl.appendChild(d);
+      });
+    }
+
+    // Detail rows (skip header row 1)
+    const dataRows = rows.filter((r, i) => i > 0 && r[0]);
+    const total    = dataRows.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+
+    chipsEl.innerHTML = `
+      <div class="chip ${accentClass}">
+        <div class="chip-label">筆數</div>
+        <div class="chip-val">${dataRows.length} 筆</div>
+      </div>
+      <div class="chip ${accentClass}">
+        <div class="chip-label">合計</div>
+        <div class="chip-val">${total.toLocaleString()} 公斤</div>
+      </div>`;
+
+    if (dataRows.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="3">尚無收受記錄</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = dataRows.map(r => `
+      <tr>
+        <td>${r[0] ?? ''}</td>
+        <td>${r[1] ?? ''}</td>
+        <td class="num">${r[2] !== undefined ? Number(r[2]).toLocaleString() : '—'}</td>
+      </tr>`).join('');
+
+  } catch(e) {
+    errEl.innerHTML = `<div class="error-box">⚠ ${e.message.replace(/\n/g,'<br>')}</div>`;
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">無法載入資料</td></tr>';
+  }
+}
+</script>
+</body>
+</html>
