@@ -46,70 +46,7 @@
     font-size: 0.76rem;
     color: #a09890;
   }
-  .gear-btn {
-    background: none;
-    border: 1px solid #3a3630;
-    border-radius: 5px;
-    color: #a09890;
-    font-size: 1rem;
-    width: 32px; height: 32px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .gear-btn:hover { border-color: #a09890; color: #f0ede8; }
 
-  /* ── Settings drawer ── */
-  .settings-drawer {
-    background: #252118;
-    color: #d0c8be;
-    padding: 0 28px;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
-  }
-  .settings-drawer.open {
-    max-height: 120px;
-    padding: 16px 28px;
-  }
-  .settings-inner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .settings-inner label { font-size: 0.76rem; color: #7a7268; letter-spacing: 0.06em; white-space: nowrap; }
-  .settings-inner input {
-    flex: 1; min-width: 200px; max-width: 380px;
-    background: #1a1612;
-    border: 1px solid #3a3630;
-    border-radius: 4px;
-    color: #d0c8be;
-    padding: 6px 10px;
-    font-size: 0.8rem;
-    font-family: 'DM Mono', monospace;
-    outline: none;
-  }
-  .settings-inner input:focus { border-color: #4a6741; }
-  .save-btn {
-    background: #4a6741;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 7px 16px;
-    font-size: 0.8rem;
-    font-family: 'Noto Sans TC', sans-serif;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.15s;
-  }
-  .save-btn:hover { opacity: 0.85; }
-  .settings-hint {
-    font-size: 0.7rem;
-    color: #5a5248;
-    width: 100%;
-    margin-top: 2px;
-  }
 
   /* ── Main ── */
   main { max-width: 880px; margin: 0 auto; padding: 36px 20px 60px; }
@@ -127,18 +64,6 @@
     margin-bottom: 24px;
   }
 
-  .no-key-notice {
-    background: var(--surface);
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    padding: 32px;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 0.86rem;
-    line-height: 1.8;
-    margin-bottom: 24px;
-  }
-  .no-key-notice strong { color: var(--text-primary); }
 
   .factory-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
@@ -288,8 +213,7 @@
     .factory-cards { grid-template-columns: 1fr; }
     header { padding: 14px 16px; }
     main { padding: 24px 14px 48px; }
-    .settings-drawer.open { padding: 14px 16px; }
-  }
+    }
 </style>
 </head>
 <body>
@@ -298,17 +222,9 @@
   <h1>茶渣收受管理系統</h1>
   <div class="header-right">
     <span class="date-badge" id="todayDate"></span>
-    <button class="gear-btn" onclick="toggleSettings()" title="設定">⚙</button>
   </div>
 </header>
 
-<!-- Hidden settings drawer -->
-<div class="settings-drawer" id="settingsDrawer">
-  <div class="settings-inner">
-    <label>API 金鑰</label>
-    <input type="password" id="apiKeyInput" placeholder="貼上 AIzaSy... 金鑰" autocomplete="off">
-    <button class="save-btn" onclick="saveConfig()">儲存並載入</button>
-    <div class="settings-hint">金鑰僅存於此裝置的瀏覽器，不會上傳至任何伺服器。</div>
   </div>
 </div>
 
@@ -317,10 +233,6 @@
   <!-- Home Page -->
   <div class="page active" id="page-home">
     <div class="home-label">各廠收受總覽</div>
-    <div id="no-key-msg" class="no-key-notice" style="display:none">
-      尚未設定 API 金鑰。<br>
-      請點右上角 <strong>⚙</strong> 按鈕，貼上 Google Sheets API 金鑰後按「儲存並載入」。
-    </div>
     <div class="factory-cards">
       <div class="factory-card f78" onclick="showDetail('78')">
         <div class="tag">78廠</div>
@@ -370,46 +282,26 @@
 </main>
 
 <script>
-// ★ 若你的分頁 tab 名稱不同，修改這裡 ★
+// ★ 設定區 — 修改這裡 ★
 const SHEET_ID    = '1d3e2tlOSFGkWB_Ei7mQZVAPJPYKLIp6_2or8Y7LUsxo';
-const SHEET_NAMES = { '78': '78廠', '75': '75廠' };
+const SHEET_NAMES = { '78': '分頁表1', '75': '分頁表2' };
+const API_KEY     = '在這裡貼上你的金鑰';  // ← 把 AIzaSy... 貼在這裡
 
 let currentFactory = null;
-let settingsOpen   = false;
 
 // Today
 const today = new Date();
 document.getElementById('todayDate').textContent =
   today.toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
 
-// ── Settings drawer ──
-function toggleSettings() {
-  settingsOpen = !settingsOpen;
-  document.getElementById('settingsDrawer').classList.toggle('open', settingsOpen);
-}
-
-function saveConfig() {
-  const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key) { alert('請貼上 API 金鑰'); return; }
-  localStorage.setItem('gs_api_key', key);
-  // close drawer
-  settingsOpen = false;
-  document.getElementById('settingsDrawer').classList.remove('open');
-  document.getElementById('no-key-msg').style.display = 'none';
-  loadTotals();
-}
-
-function getApiKey() { return localStorage.getItem('gs_api_key') || ''; }
+function getApiKey() { return API_KEY; }
 
 window.onload = () => {
-  const saved = getApiKey();
-  if (saved) {
-    document.getElementById('apiKeyInput').value = saved;
-    loadTotals();
-  } else {
+  if (!API_KEY || API_KEY === '在這裡貼上你的金鑰') {
     document.getElementById('total-78').textContent = '—';
     document.getElementById('total-75').textContent = '—';
-    document.getElementById('no-key-msg').style.display = 'block';
+  } else {
+    loadTotals();
   }
 };
 
@@ -450,7 +342,6 @@ async function fetchRange(sheetName, range) {
 
 // ── Load home totals ──
 async function loadTotals() {
-  if (!getApiKey()) return;
   for (const factory of ['78', '75']) {
     const el = document.getElementById(`total-${factory}`);
     el.innerHTML = '<span class="skeleton"></span>';
